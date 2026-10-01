@@ -1,0 +1,7 @@
+# Scripts resolve this relative path against the repository root.
+path: data/processed
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: person
