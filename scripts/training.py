@@ -16,6 +16,10 @@ def train(condition):
     parser.add_argument('--smoke', action='store_true', help='1 epoch in a separate run; never used as final results')
     parser.add_argument('--batch', type=int, default=16, help='Reduce only after a recorded CUDA OOM')
     args = parser.parse_args()
+    if condition == 'augmented' and not args.smoke:
+        baseline = json.loads((ROOT / 'results/metrics/baseline_training.json').read_text())
+        assert baseline['completed'], 'Complete the baseline first'
+        assert args.batch == baseline['effective_batch'], 'Both conditions must use the same batch size'
     name = condition + ('_smoke' if args.smoke else '')
     if (ROOT / f'runs/{name}').exists():
         raise RuntimeError(f'runs/{name} already exists; preserve or move it before a new run')
