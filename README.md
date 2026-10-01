@@ -3,7 +3,7 @@
 ## Project goal
 
 Fine-tune COCO-pretrained YOLO11n for pedestrian detection on Penn-Fudan.
-This standalone university project covers preparation, training, validation,
+The project covers dataset preparation, training, validation,
 held-out testing, speed measurement, and visual error analysis.
 
 ## Research question
@@ -24,7 +24,7 @@ small or occluded pedestrians noted in the archive readme.
 Sorted filenames are shuffled using Python `random.Random(42)`. Train and
 validation counts use floor(0.70*N) and floor(0.15*N); test gets the remainder.
 Saved split manifests and zero-overlap assertions prevent filename leakage.
-Nearby scenes may be correlated: this requested image split does not guarantee
+Nearby scenes may be correlated: this image split does not guarantee
 scene independence. See `data/splits/statistics.json` for measured statistics.
 
 ## Baseline
@@ -162,6 +162,36 @@ runs/               full training outputs and weights (ignored)
 ```
 
 ## Reproducibility
+
+To reproduce the experiments, start from a fresh checkout:
+
+```bash
+git clone git@github.com:AbdullohML/p-detection.git
+cd p-detection
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+python scripts/download_dataset.py
+python scripts/prepare_dataset.py
+# Inspect results/figures/dataset_examples/ before training.
+python scripts/train_baseline.py --smoke
+python scripts/train_baseline.py
+python scripts/evaluate.py --condition baseline
+python scripts/benchmark.py --condition baseline
+python scripts/train_augmented.py
+python scripts/evaluate.py --condition augmented
+python scripts/benchmark.py --condition augmented
+python scripts/analyze_failures.py
+python scripts/report_results.py
+```
+
+For an existing checkout, preserve and move previous `runs/baseline_smoke/`,
+`runs/baseline/`, and `runs/augmented/` directories before retraining. Model
+checkpoints are not included in Git, so training is required in a fresh checkout.
+The download script reuses an existing dataset, and preparation reproduces the
+saved filename splits. Compare outputs with `data/splits/statistics.json` and
+`results/metrics/results.csv`; review failure figures visually after each run.
 
 Seed 42; fixed split manifests; pinned direct dependencies. Each training and
 benchmark record includes software versions and hardware. CUDA determinism is
