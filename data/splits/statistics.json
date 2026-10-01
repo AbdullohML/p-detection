@@ -1,0 +1,11 @@
+{
+  "seed": 42,
+  "total_images": 170,
+  "train_images": 119,
+  "val_images": 25,
+  "test_images": 26,
+  "instances": 423,
+  "average_pedestrians": 2.488235294117647,
+  "min_pedestrians": 1,
+  "max_pedestrians": 8
+}
