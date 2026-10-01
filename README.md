@@ -18,6 +18,9 @@ value is one instance. Boxes enclose all foreground pixels with exclusive
 upper edges (maximum foreground coordinate + 1), then become normalized YOLO
 `0 x_center y_center width height` labels. The only class is person.
 
+The downloaded official masks contain 423 instances, including newly labeled
+small or occluded pedestrians noted in the archive readme.
+
 Sorted filenames are shuffled using Python `random.Random(42)`. Train and
 validation counts use floor(0.70*N) and floor(0.15*N); test gets the remainder.
 Saved split manifests and zero-overlap assertions prevent filename leakage.
@@ -94,7 +97,7 @@ python scripts/evaluate.py --condition baseline
 python scripts/evaluate.py --condition augmented
 ```
 
-Reports test mAP@0.5, mAP@0.5:0.95, precision, and recall. Do not tune from test
+Test images use explicit 640×640 padding (`rect=False`). Reports test mAP@0.5, mAP@0.5:0.95, precision, and recall. Do not tune from test
 results. Both use the same test set. JSON records accompany `results/metrics/results.csv`.
 
 ## Benchmark inference
@@ -104,7 +107,7 @@ python scripts/benchmark.py --condition baseline
 python scripts/benchmark.py --condition augmented
 ```
 
-Batch 1, FP32, ten warmup predictions, five passes through identical preloaded
+Batch 1, FP32, explicit 640×640 padding (`rect=False`), ten warmup predictions, five passes through identical preloaded
 test images. Wall-clock timing includes preprocessing, forward pass and NMS;
 excludes model loading and disk reads. CUDA synchronizes before and after each
 prediction. FPS = 1000 / mean latency in milliseconds. Hardware/software and
@@ -122,24 +125,40 @@ never automatically infer occlusion or other causes from matching counts.
 
 ## Results
 
-Full experiment results are pending. No unmeasured metrics are reported.
-Evaluation and benchmarking automatically generate `results/metrics/comparison.md`
-from `results.csv`. Training records contain elapsed time, best checkpoint,
-final epoch metrics, best validation metrics, and hardware/software versions.
+| Model | Condition | mAP@0.5 | mAP@0.5:0.95 | Precision | Recall | Latency ms | FPS |
+|---|---|---:|---:|---:|---:|---:|---:|
+| YOLO11n | Baseline | 0.9586 | 0.8128 | 0.9676 | 0.9063 | 8.1828 | 122.2070 |
+| YOLO11n | Strong augmentation | 0.9413 | 0.6066 | 0.8982 | 0.9394 | 8.0861 | 123.6683 |
+
+Measured on the same 26 held-out test images; metrics are fractions.
+
+Stronger augmentation changed mAP@0.5:0.95 by -0.2062. It did not improve overall AP on this split.
+
+Dataset: 170 images; 119 train, 25 validation, 26 test. 423 pedestrian instances; mean 2.488/image, minimum 1, maximum 8.
+
+Baseline: 50 epochs, batch 16, AMP enabled; training command 103.86 s (including startup, plotting, checkpoint saving and Ultralytics' final validation); 106.50 s including the additional best-checkpoint validation. Checkpoint: `runs/baseline/weights/best.pt` (local, ignored by Git).
+
+Augmented: 50 epochs, batch 16, AMP enabled; training command 105.47 s (including startup, plotting, checkpoint saving and Ultralytics' final validation); 108.02 s including the additional best-checkpoint validation. Checkpoint: `runs/augmented/weights/best.pt` (local, ignored by Git).
+
+Hardware: NVIDIA GeForce RTX 3050 Laptop GPU; 11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz. Python 3.13.9, PyTorch 2.11.0+cu130, CUDA runtime 13.0, Ultralytics 8.3.228.
+
+The table is generated from `results/metrics/results.csv`. Training/validation records, per-epoch curves, test metrics, and all benchmark timings are saved in `results/`. Precision and recall use Ultralytics' maximum-F1 operating point. The separate FP/FN analysis uses confidence 0.25.
+
+Regenerate the table and README results with `python scripts/report_results.py`.
 
 ## Repository structure
 
 ```text
 configs/             relative dataset YAML
 scripts/             download, conversion, training, evaluation, speed, matching
- data/raw/           official archive and extracted dataset (ignored)
- data/processed/     YOLO images and labels (ignored)
- data/splits/        reproducible filename manifests and statistics
- docs/               baseline, experiment, visually reviewed failure analysis
- results/metrics/    measured CSV/JSON records and comparison
- results/figures/    lightweight annotation, training, evaluation, failure figures
- results/predictions/ test predictions and matching records
- runs/               full training outputs and weights (ignored)
+data/raw/           official archive and extracted dataset (ignored)
+data/processed/     YOLO images and labels (ignored)
+data/splits/        reproducible filename manifests and statistics
+docs/               baseline, experiment, visually reviewed failure analysis
+results/metrics/    measured CSV/JSON records and comparison
+results/figures/    lightweight annotation, training, evaluation, failure figures
+results/predictions/ test predictions and matching records
+runs/               full training outputs and weights (ignored)
 ```
 
 ## Reproducibility
@@ -149,3 +168,13 @@ benchmark record includes software versions and hardware. CUDA determinism is
 requested, but different devices/library versions can still produce differences.
 The best validation checkpoint, rather than the last epoch, is evaluated.
 Checkpoints, data copies, virtual environment, and large runs are excluded from Git.
+
+Correctness checks:
+
+```bash
+python -m unittest discover -s tests
+python -m compileall -q scripts tests
+```
+
+See [execution notes](docs/execution.md) for GPU access and the Ultralytics
+version compatibility diagnosis.

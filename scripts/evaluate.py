@@ -12,20 +12,20 @@ def main():
     torch.set_num_threads(6)
     for condition in CONDITIONS if args.condition == 'both' else [args.condition]:
         model = YOLO(str(checkpoint(condition)))
-        metrics = model.val(data=dataset(), split='test', imgsz=640, batch=1,
+        metrics = model.val(data=dataset(), split='test', imgsz=640, rect=False, batch=1,
                             device=0 if torch.cuda.is_available() else 'cpu',
                             conf=0.001, iou=0.7, plots=True,
                             project=str(ROOT / 'runs'), name=condition+'_test')
         values = dict(mAP50=float(metrics.box.map50), mAP50_95=float(metrics.box.map),
                       precision=float(metrics.box.mp), recall=float(metrics.box.mr))
         (ROOT / f'results/metrics/{condition}_test.json').write_text(json.dumps(
-            {'metrics': values, 'hardware': hardware(), 'split': 'test',
+            {'metrics': values, 'hardware': hardware(), 'split': 'test', 'imgsz': 640, 'rect': False,
              'precision_recall': 'Ultralytics confidence at maximum smoothed F1; not fixed 0.25'}, indent=2)+'\n')
         update_results(condition, values)
         import shutil
         folder = ROOT / f'results/figures/{condition}_test'
         folder.mkdir(exist_ok=True)
-        for image in metrics.save_dir.glob('*.png'):
+        for image in list(metrics.save_dir.glob('*.png')) + list(metrics.save_dir.glob('val_batch*.jpg')):
             shutil.copy2(image, folder / image.name)
 
 

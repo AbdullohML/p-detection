@@ -7,3 +7,5 @@ data/processed/
 runs/
 *.tmp
 .cache/
+results/figures/baseline_smoke/
+results/figures/diagnostic_8.4.171/

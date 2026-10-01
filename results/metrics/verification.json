@@ -1,0 +1,56 @@
+{
+  "split_counts": {
+    "train": 119,
+    "val": 25,
+    "test": 26
+  },
+  "zero_filename_overlap": true,
+  "unique_image_sha256": 170,
+  "label_image_pairs_verified": 170,
+  "full_epochs_each": 50,
+  "effective_batch_each": 16,
+  "effective_amp_each": true,
+  "configuration_differences": {
+    "name": [
+      "baseline",
+      "augmented"
+    ],
+    "hsv_h": [
+      0.015,
+      0.03
+    ],
+    "hsv_s": [
+      0.7,
+      0.8
+    ],
+    "hsv_v": [
+      0.4,
+      0.5
+    ],
+    "degrees": [
+      0.0,
+      10.0
+    ],
+    "translate": [
+      0.1,
+      0.2
+    ],
+    "scale": [
+      0.5,
+      0.7
+    ],
+    "shear": [
+      0.0,
+      2.0
+    ],
+    "save_dir": [
+      "/home/abdullloh/p-detection/runs/baseline",
+      "/home/abdullloh/p-detection/runs/augmented"
+    ]
+  },
+  "benchmark_samples_each": 130,
+  "matching_accounting_verified": true,
+  "matching_unit_tests_passed": 6,
+  "requirements_verified": "pip install --no-index -r requirements.txt",
+  "pretrained_checkpoint_sha256": "0ebbc80d4a7680d14987a577cd21342b65ecfd94632bd9a8da63ae6417644ee1"
+}

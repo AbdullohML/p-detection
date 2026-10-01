@@ -25,7 +25,7 @@ def main():
     for condition in CONDITIONS if args.condition == 'both' else [args.condition]:
         model = YOLO(str(checkpoint(condition)))
         def predict(image):
-            return model.predict(image, imgsz=640, batch=1, device=device,
+            return model.predict(image, imgsz=640, rect=False, batch=1, device=device,
                                  conf=0.25, iou=0.7, half=False, verbose=False)
         for i in range(args.warmup):
             predict(images[i % len(images)])
@@ -40,7 +40,7 @@ def main():
         values = dict(latency_ms=float(np.mean(times)), fps=float(1000/np.mean(times)))
         record = dict(metrics=values, hardware=hardware(), warmup=args.warmup,
                       repeats=args.repeats, images=names, timings_ms=times,
-                      methodology='PIL images preloaded; batch 1; FP32; imgsz 640; preprocessing + forward + NMS; synchronized wall time')
+                      methodology='PIL images preloaded; batch 1; FP32; fixed 640x640 padding (rect=False); preprocessing + forward + NMS; synchronized wall time')
         (ROOT / f'results/metrics/{condition}_benchmark.json').write_text(json.dumps(record, indent=2)+'\n')
         update_results(condition, values)
         print(condition, values)
